@@ -1,0 +1,9 @@
+name: Feature / 功能建议
+description: Describe the problem and an observable outcome.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem, use case and expected behavior
+    validations:
+      required: true

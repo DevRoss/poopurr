@@ -1,0 +1,20 @@
+name: Bug report / 故障报告
+description: Report a reproducible issue without account data.
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and expected result / 复现步骤与预期结果
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Project version, Node version, PETKIT model and region
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized error / 脱敏错误
+      description: Do not include passwords, tokens, device IDs, pet IDs, emails, phone numbers, or real activity logs.

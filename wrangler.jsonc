@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "poopurr",
+  "main": "server.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {"directory": "./dist/client", "binding": "ASSETS", "run_worker_first": true},
+  "d1_databases": [{"binding": "DB", "database_name": "poopurr", "database_id": "replace-with-your-d1-id", "migrations_dir": "drizzle"}],
+  "vars": {"PUBLIC_ORIGIN": "https://replace-with-your-worker.workers.dev"}
+}

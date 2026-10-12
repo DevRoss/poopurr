@@ -1,0 +1,41 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
+import {normalize,mergeEvents,summarize,bounds,dayAt,validDay} from '../lib/records.mjs';
+import {rpc,tools} from '../lib/mcp.mjs';
+const dev={id:'1',name:'猫砂盆',type:'t4'};
+const sec=Date.parse('2026-10-10T12:00:00+08:00')/1000;
+const raw=(extra={})=>({eventId:'a',petId:123,petName:'芝麻',timestamp:sec,content:{timeIn:sec-40,timeOut:sec,petWeight:4500},...extra});
+test('normal visit preserves unknown classification, duration and raw weight',()=>{const n=normalize(raw(),dev);assert.equal(n.duration_seconds,40);assert.equal(n.stool_detected,null);assert.equal(n.weight_raw,4500);assert.equal(n.weight_unit,'upstream_unverified');});
+test('cleaning and waste-check records do not become visits',()=>{assert.equal(normalize(raw({enumEventType:'waste_check'}),dev),null);assert.equal(normalize({timestamp:sec,enumEventType:'clean'},dev),null);});
+test('stool and urine can coexist, missing flags are unknown',()=>{const n=normalize(raw({subContent:[{content:{hardStools:1,urineBolus:1}}]}),dev);assert.equal(n.stool_detected,true);assert.equal(n.urine_detected,true);assert.equal(n.soft_stool_detected,null);});
+test('unknown pet is never assigned based on weight',()=>{const n=normalize(raw({petId:0}),dev);assert.equal(n.pet_id,null);});
+test('missing metrics stay null',()=>{const n=normalize(raw({content:{},enumEventType:'toileting'}),dev);assert.equal(n.duration_seconds,null);assert.equal(n.weight_raw,null);});
+test('invalid timestamp does not become a visit',()=>{assert.equal(normalize({enumEventType:'toileting',timestamp:12},dev),null);});
+test('unverified isShit flag is not treated as confirmed defecation',()=>{const n=normalize({eventId:'a',time:sec,content:{isShit:1}},dev,'graph');assert.equal(n.stool_detected,null);});
+test('record and graph merge by event key without losing classification',()=>{const r=normalize(raw({subContent:[{content:{hardStools:1}}]}),dev);const g=normalize({eventId:'a',petId:123,time:sec,toiletTime:40},dev,'graph');assert.equal(r.key,g.key);const n=mergeEvents(r,g);assert.equal(n.stool_detected,true);assert.deepEqual(n.source,['record','graph']);});
+test('updated upstream pet attribution is applied',()=>{const a=normalize(raw(),dev),b=normalize(raw({petId:456}),dev);assert.equal(mergeEvents(a,b).pet_id,'456');});
+test('summary separates cats, unknown attribution and excludes end boundary',()=>{const a=normalize(raw(),dev),b=normalize(raw({eventId:'b',petId:456}),dev),u=normalize(raw({eventId:'c',petId:0}),dev);const out=summarize([a,b,u],'2026-10-10','2026-10-11');assert.equal(out.length,3);assert.equal(out[0].detected_stool,0);assert.equal(summarize([a],'2026-10-09','2026-10-10').length,0);assert.equal(summarize([u],'2026-10-10','2026-10-11','unknown').length,1);});
+test('empty summaries do not synthesize zero days',()=>assert.deepEqual(summarize([],'2026-10-01','2026-10-11'),[]));
+test('Shanghai boundaries and invalid dates',()=>{assert.equal(dayAt(Date.parse('2026-10-09T17:00:00Z')),'2026-10-10');assert.throws(()=>validDay('2026-02-30'));assert.throws(()=>bounds('2026-10-10','2026-10-09'));assert.throws(()=>bounds('2026-01-01','2026-10-09'));});
+const request=(method,params={})=>({jsonrpc:'2.0',id:1,method,params});
+test('MCP initialize/list/notification protocol',async()=>{assert.equal((await rpc(request('initialize',{protocolVersion:'2025-03-26'}),null,()=>{})).body.result.protocolVersion,'2025-03-26');assert.equal((await rpc(request('tools/list'),null,()=>{})).body.result.tools.length,8);assert.equal((await rpc({jsonrpc:'2.0',method:'notifications/initialized'},null,()=>{})).status,202);});
+test('MCP cannot invoke private calls without platform identity',async()=>{let called=false;const r=await rpc(request('tools/call',{name:'get_connection_status'}),null,()=>{called=true});assert.equal(r.status,401);assert.equal(called,false);});
+test('MCP validates tool allowlist, argument names and types',async()=>{for(const params of [{name:'clean_litter'},{name:'get_connection_status',arguments:{token:'bad'}},{name:'get_toilet_events',arguments:{limit:'100'}},{name:'get_toilet_events',arguments:{limit:999}}]){const r=await rpc(request('tools/call',params),'u',()=>assert.fail());assert.equal(r.body.error.code,-32602);}});
+test('MCP routes identity and returns structured results',async()=>{const r=await rpc(request('tools/call',{name:'get_connection_status'}),'userA',async(user)=>({user,connected:false}));assert.equal(r.body.result.structuredContent.user,'userA');});
+test('MCP errors never expose secrets',async()=>{const r=await rpc(request('tools/call',{name:'get_connection_status'}),'u',()=>{throw new Error('password=secret')});assert.equal(r.body.result.isError,true);assert.ok(!JSON.stringify(r).includes('password'));});
+test('tool surface contains no device actuation',()=>{assert.ok(tools.every(t=>!t.name.match(/clean|feed|dump|rotate/)));});
+// Compile the adapter in-memory to mock HTTP; no real PETKIT account or network is used.
+const source=await readFile(new URL('../lib/petkit.ts',import.meta.url),'utf8');
+const code=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace("'./records.mjs'",JSON.stringify(new URL('../lib/records.mjs',import.meta.url).href));
+const api=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+test('CN login uses fixed official gateway, hashes password, reads session',async()=>{const saved=globalThis.fetch;let captured;globalThis.fetch=async(req)=>{captured={url:req.url,body:await req.text(),redirect:req.redirect};return Response.json({result:{session:{id:'test-token',expiresIn:300,userId:'42'}}});};try{const s=await api.login('test@example.com','sample-password','CN');assert.equal(captured.url,'https://api.petkit.cn/6/user/login');assert.ok(!captured.body.includes('sample-password'));assert.equal(s.token,'test-token');assert.equal(captured.redirect,'manual');}finally{globalThis.fetch=saved;}});
+test('session-expiry error is surfaced without upstream secret message',async()=>{const saved=globalThis.fetch;globalThis.fetch=async()=>Response.json({error:{code:5,msg:'sensitive upstream text'}});try{await assert.rejects(()=>api.post('https://api.petkit.cn/6/test'),e=>e.code==='session_expired'&&!e.message.includes('sensitive'));}finally{globalThis.fetch=saved;}});
+test('record payload validation treats empty list as success and unknown as failure',()=>{assert.deepEqual(api.listPayload({list:[]}),[]);assert.throws(()=>api.listPayload({unexpected:[]}));});
+test('no-camera and camera requests use their distinct endpoint schemas',async()=>{const saved=globalThis.fetch;const calls=[];globalThis.fetch=async(req)=>{calls.push([req.url,new URLSearchParams(await req.text())]);return Response.json({result:[]});};const s={base:'https://api.petkit.cn/6/',token:'test',expires:Date.now()+100000};try{await api.records(s,{id:'1',type:'t3'},'2026-10-10');await api.records(s,{id:'2',type:'t6',typeCode:1},'2026-10-09');assert.equal(calls[0][1].get('day'),'20261010');assert.ok(calls[1][0].endsWith('t6/getDeviceRecordRelease'));assert.equal(calls[1][1].has('date'),false);assert.ok(calls[2][0].endsWith('t6/getPetOutGraph'));}finally{globalThis.fetch=saved;}});
+test('camera history starts at the requested Shanghai day end and walks backwards',async()=>{
+ const saved=globalThis.fetch,calls=[],start=Date.parse('2026-10-08T00:00:00+08:00')/1000;let page=0;
+ globalThis.fetch=async(req)=>{const p=new URLSearchParams(await req.text());calls.push({url:req.url,cursor:Number(p.get('timestamp'))});if(req.url.endsWith('getPetOutGraph'))return Response.json({result:[]});return Response.json({result:++page===1?[{eventId:'one',timestamp:start+40000}]:[{eventId:'old',timestamp:start-10}]});};
+ try{const r=await api.records({base:'https://api.petkit.cn/6/',token:'test',expires:Date.now()+100000},{id:'1',type:'t6',typeCode:1},'2026-10-08');assert.equal(calls[0].cursor,start+86400-1);assert.equal(calls[1].cursor,start+40000-1);assert.equal(calls[2].cursor,start+86400-1);assert.equal(r.partial,false);}finally{globalThis.fetch=saved;}
+});
