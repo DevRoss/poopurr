@@ -1,20 +1,50 @@
+<div align="center">
+
+<img src="docs/assets/banner.svg" alt="Poopurr — Small habits. Big love." width="100%" />
+
 # Poopurr · 猫咪如厕手账
 
-[English](README.en.md) · [贡献指南](CONTRIBUTING.md) · [安全说明](SECURITY.md) · [路线图](ROADMAP.md)
+**把猫咪的小日常，慢慢记下来。**
 
-一个可自行部署的 **PETKIT 猫砂盆记录与多猫行为观察工具**。按日期补拉记录，比较猫咪的如厕时段、次数、停留时长，也能通过 MCP 查询。
+自部署的 PETKIT 猫砂盆观察工具：历史记录、多猫行为可视化，以及可以直接提问的 MCP。
 
-**状态：早期实验版，MIT 许可。非 PETKIT 官方项目。** 大小便时长推测单独标为低可信，不等于确认结果，不用于诊断。[GitHub 仓库](https://github.com/DevRoss/poopurr) · [CI 状态](https://github.com/DevRoss/poopurr/actions/workflows/ci.yml)
+[![CI](https://github.com/DevRoss/poopurr/actions/workflows/ci.yml/badge.svg)](https://github.com/DevRoss/poopurr/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-527862)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-22.13%2B-527862?logo=nodedotjs&logoColor=white)](package.json)
+[![Demo](https://img.shields.io/badge/demo-try_it_now-c28c5b?logo=googlechrome&logoColor=white)](https://poopurr-demo.bushy-slug-1458.chatgpt.site)
 
-## 能做什么
+### [🐾 打开互动 Demo](https://poopurr-demo.bushy-slug-1458.chatgpt.site)
 
-- 近 31 天按日补拉，支持日期范围、进度、暂停和重试，历史记录去重保存。
-- 多猫小时热图、每日观察次数、时长直方图；猫咪归属沿用上游识别。
-- 设备识别、人工标注与时长推测分开显示。样本不足、两类重叠或身份未知时保持不确定。
-- 8 个 MCP 工具：连接状态、设备、猫咪、同步、明细、每日统计、趋势、行为分析。
-- 只读 PETKIT 设备，不会清理、倒砂、转动设备。人工标注只修改本应用数据库。
+**[快速开始](#快速开始)** · **[English](README.en.md)** · **[MCP 接入](#mcp)** · **[路线图](ROADMAP.md)**
 
-## 快速开始：本地运行
+</div>
+
+---
+
+## 先认识两位虚拟观察员
+
+Demo 里的 **麻薯** 和 **吐司**，有各自的如厕节奏。无需注册或 PETKIT 账号，打开就能体验：
+
+1. 切换 **7 / 14 / 30 天**，观察每天的次数变化。
+2. 对比两只猫的 **小时热图、停留时长与分布**。
+3. 在明细里 **手动校正** 一条记录，看看分析如何更新。
+
+> Demo 全部使用固定的合成数据，不连接 PETKIT；标注只在当前页面生效。图表与时长分析复用正式应用的组件和算法。[运行自己的 Demo →](docs/DEMO.md)
+
+## 小日常，也值得认真观察
+
+| | 功能 | 你能看到什么 |
+| :---: | --- | --- |
+| 📅 | **历史补拉** | 按日期读取近 31 天记录，支持进度、暂停、重试和去重 |
+| 🐈 | **每只猫的节奏** | 小时热图、每日观察次数、时长分布，各自统计与对比 |
+| 🔎 | **有依据的分类** | 设备识别、人工标注、时长推测分开展示；未知保留为未知 |
+| 💬 | **通过 MCP 提问** | 8 个只读工具，查询设备、猫咪、记录、趋势和行为分析 |
+| 🏡 | **数据留在你的实例** | Cloudflare Workers + D1 自部署，一个家庭一份手账 |
+| 🛡️ | **设备只读** | 不清理、不倒砂、不转动设备；标注只修改本应用数据 |
+
+> **早期实验版 · 非 PETKIT 官方项目。** 仅凭停留时长不能确认大小便，推测不等于检测结果，也不用于诊断。[了解模型边界 →](docs/CLASSIFICATION.md)
+
+## 快速开始
 
 需要 Node.js **22.13+**（推荐 Node 24）和 npm。无需 ChatGPT/Sites 账号；本地模式无需 Cloudflare 登录。
 

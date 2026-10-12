@@ -1,6 +1,10 @@
 # Poopurr
 
-[中文 README](README.md)
+<img src="docs/assets/banner.svg" alt="Poopurr — Small habits. Big love." width="100%" />
+
+**[🐾 Try the live demo](https://poopurr-demo.bushy-slug-1458.chatgpt.site)** · [中文 README](README.md) · [Demo guide](docs/DEMO.md)
+
+No sign-in required. Explore two fictional cats, switch date ranges, and edit sample labels. Synthetic data only; changes stay in the current page.
 
 Self-hosted PETKIT litter-box history, per-cat behavior charts and read-only MCP tools. Early experimental release, MIT licensed, unofficial and not affiliated with PETKIT.
 

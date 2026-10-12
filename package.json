@@ -16,7 +16,9 @@
     "check": "npm run typecheck && npm test && npm run build",
     "db:local": "wrangler d1 migrations apply DB --local",
     "dev": "npm run build && npm run db:local && wrangler dev",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "demo": "vite --config vite.demo.config.ts",
+    "build:demo": "vite build --config vite.demo.config.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

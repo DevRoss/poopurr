@@ -16,5 +16,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: npm run build:demo
       - run: npx wrangler deploy --dry-run
       - run: node scripts/check-public-source.mjs
