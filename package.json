@@ -28,16 +28,16 @@
     "recharts": "^3.8.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260515.1",
+    "@cloudflare/workers-types": "5.20261009.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
+    "esbuild": "0.28.2",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
-    "vite": "8.0.13",
-    "wrangler": "4.92.0",
-    "esbuild": "0.27.4"
+    "vite": "8.3.4",
+    "wrangler": "4.151.0"
   }
 }
