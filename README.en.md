@@ -38,6 +38,10 @@ T4 historical retrieval was tested in a private deployment. T3 and camera-model 
 
 Passwords are not stored; sessions are AES-GCM encrypted. Activity records are not application-encrypted at rest. Protect the cloud account, keys and backups. Never send real credentials or private logs in issues.
 
+## Export displayed records
+
+Download the current event table as CSV, preserving classification provenance and uncertainty. This is a local snapshot (up to 100 rows in the application, 20 in the demo), not a full-history backup. [Export guide](docs/CSV-EXPORT.md).
+
 ## Development
 
 `npm run check` runs type checks, synthetic tests (including workerd/D1), and the frontend build. `npx wrangler deploy --dry-run` checks the Worker bundle. See [CONTRIBUTING](CONTRIBUTING.md), [SECURITY](SECURITY.md), [architecture](docs/ARCHITECTURE.md), [inference limits](docs/CLASSIFICATION.md) and [maintenance](docs/MAINTENANCE.md).
