@@ -41,8 +41,6 @@
     "wrangler": "4.151.0"
   },
   "overrides": {
-    "miniflare": {
-      "undici": "7.30.1"
-    }
+    "undici": "7.30.1"
   }
 }
