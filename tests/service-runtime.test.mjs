@@ -1,3 +1,4 @@
+import {createRuntime} from './runtime.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -7,11 +8,11 @@ import {dayAt} from '../lib/records.mjs';
 import {nextDay} from '../lib/sync-plan.mjs';
 const require=createRequire(import.meta.url);
 const paths=[require.resolve('wrangler')];
-const {Miniflare}=await import(require.resolve('miniflare',{paths}));
+
 const {build}=await import(require.resolve('esbuild',{paths}));
 const output=await build({stdin:{contents:`import {connect,runTool,labelEvent} from './lib/service';export default {async fetch(r){const {user='u',action,args={}}=await r.json();try{return Response.json(action==='connect'?await connect(user,{username:'synthetic',password:'test',region:'CN'}):action==='label'?await labelEvent(user,args.key,args.label):await runTool(user,action,args));}catch(e){return Response.json({error:e.message},{status:400});}}};`,resolveDir:resolve('.')},bundle:true,write:false,format:'esm',platform:'node',external:['cloudflare:workers'],target:'es2022'});
 test('D1 history backfill, continuation, deduplication, labeling and owner isolation',async()=>{
- let dates=[];const mf=new Miniflare({script:output.outputFiles[0].text,modules:true,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'test'},bindings:{PETKIT_SESSION_KEY:'ab'.repeat(32)},outboundService:async req=>{
+ let dates=[];const mf=createRuntime({script:output.outputFiles[0].text,modules:true,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'test'},bindings:{PETKIT_SESSION_KEY:'ab'.repeat(32)},outboundService:async req=>{
   const path=new URL(req.url).pathname,p=new URLSearchParams(await req.text());let result;
   if(path.endsWith('user/login'))result={session:{id:'test-token',expiresIn:86400}};
   else if(path.endsWith('group/family/list'))result=[{groupId:'g',deviceList:[{deviceId:'1',deviceType:'t4'}],petList:[{petId:1,petName:'A'},{petId:2,petName:'B'}]}];

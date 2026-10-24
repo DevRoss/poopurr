@@ -1,14 +1,13 @@
+import {createRuntime} from './runtime.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRequire} from 'node:module';
 import {readFile} from 'node:fs/promises';
-import {resolve} from 'node:path';
 import {build} from 'esbuild';
-const require=createRequire(import.meta.url),{Miniflare}=await import(require.resolve('miniflare',{paths:[require.resolve('wrangler')]}));
+
 const bundle=await build({entryPoints:['server.ts'],bundle:true,write:false,format:'esm',platform:'node',target:'es2022',external:['cloudflare:workers']});
 test('portable HTTP boundary protects assets, REST, MCP and rejects forged identity / CSRF',async()=>{
  const token='test-access-'.repeat(5),origin='https://example.invalid';
- const mf=new Miniflare({script:bundle.outputFiles[0].text,modules:true,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'http-test'},bindings:{ACCESS_TOKEN:token,PETKIT_SESSION_KEY:'ab'.repeat(32),PUBLIC_ORIGIN:origin},serviceBindings:{ASSETS:()=>new Response('test-ui')}});
+ const mf=createRuntime({script:bundle.outputFiles[0].text,modules:true,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'http-test'},bindings:{ACCESS_TOKEN:token,PETKIT_SESSION_KEY:'ab'.repeat(32),PUBLIC_ORIGIN:origin},serviceBindings:{ASSETS:()=>new Response('test-ui')}});
  const call=(path,options={})=>mf.dispatchFetch(origin+path,{redirect:'manual',...options});
  try{
   const db=await mf.getD1Database('DB');for(const sql of (await readFile('drizzle/0000_initial.sql','utf8')).split('--> statement-breakpoint'))await db.prepare(sql).run();
