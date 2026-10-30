@@ -124,3 +124,5 @@ node scripts/check-public-source.mjs
 ## 许可与致谢
 
 MIT，见 [LICENSE](LICENSE)。协议实现参考 [py-petkit-api](https://github.com/Jezza34000/py-petkit-api) 与 [mcp-server-petkit](https://github.com/dirkjanfaber/mcp-server-petkit)。上游许可与署名完整保留在 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。PETKIT 名称属于其权利人，本项目不代表官方。
+
+[按日同步覆盖摘要](docs/COVERAGE.md)：查询结果列出未读取和部分读取的日期，避免把缺失记录当作零次。

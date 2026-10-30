@@ -1,3 +1,4 @@
+import { summarizeCoverage } from './coverage.mjs';
 import { env } from 'cloudflare:workers';
 import { and, eq, gte, lt, desc, isNull, sql } from 'drizzle-orm';
 import { getDb } from '../db';
@@ -105,7 +106,7 @@ export async function runTool(user:string,name:string,args:any={}){
   const {rows:rawRows,truncated}=await eventRows(user,start,end,args.pet_id,args.device_id);
   const info=await status(user);
   const rows=annotateEvents(rawRows);
-  const meta={start_date:start,end_date_exclusive:end,timezone:'Asia/Shanghai',last_successful_sync:info.last_successful_sync,stale:info.stale,coverage:info.coverage,truncated,limitations:['如厕不等于排便；classification 为单独的设备/人工/时长推测结果，不能混为确认次数。','没有记录不代表 0 次；未覆盖日期不补零。','宠物归属沿用上游识别，不按体重猜测。','体重只保留原始值，单位未实机核实。','按需同步，未启用后台轮询或推送。']};
+  const meta={start_date:start,end_date_exclusive:end,timezone:'Asia/Shanghai',last_successful_sync:info.last_successful_sync,stale:info.stale,coverage:info.coverage,coverage_summary:summarizeCoverage(info.coverage,info.devices,start,end,args.device_id??null),truncated,limitations:['如厕不等于排便；classification 为单独的设备/人工/时长推测结果，不能混为确认次数。','没有记录不代表 0 次；未覆盖日期不补零。','宠物归属沿用上游识别，不按体重猜测。','体重只保留原始值，单位未实机核实。','按需同步，未启用后台轮询或推送。']};
   if(name==='get_behavior_analysis')return {...meta,...analyzeBehavior(rawRows,info.pets,start,end,info.coverage)};
   if(name==='get_toilet_events'){
     const offset=Number(args.offset??0),limit=Number(args.limit??50);

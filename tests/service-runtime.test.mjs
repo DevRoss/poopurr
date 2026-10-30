@@ -28,6 +28,9 @@ test('D1 history backfill, continuation, deduplication, labeling and owner isola
   const first=await call('sync_litter_records',{start_date:yesterday,end_date:end});assert.equal(first.new_events,1);assert.equal(first.next_start_date,today);
   const second=await call('sync_litter_records',{start_date:first.next_start_date,end_date:end});assert.equal(second.new_events,1);assert.equal(second.next_start_date,null);assert.equal(second.retry_after_seconds,undefined);
   let result=await call('get_toilet_events',{start_date:yesterday,end_date:end});assert.equal(result.events.length,2);assert.notEqual(dates[0],dates[1]);
+  assert.equal(result.coverage_summary.days.length,2);assert.equal(result.coverage_summary.complete,false);assert.equal(result.coverage_summary.days[0].state,'fetched');assert.ok(result.coverage_summary.needs_review_dates.includes(today));
+  const isolated=await call('get_toilet_events',{start_date:yesterday,end_date:end},'other');assert.equal(isolated.coverage_summary.days[0].state,'unknown_devices');
+  const filtered=await call('get_toilet_events',{start_date:yesterday,end_date:end,device_id:'absent'});assert.equal(filtered.coverage_summary.days[0].state,'not_fetched');
   const key=result.events[0].key;await assert.rejects(call('label',{key,label:'stool'},'other'),/Event not found/);await call('label',{key,label:'stool'});
   assert.equal((await call('sync_litter_records',{date:today})).new_events,0);
   result=await call('get_toilet_events',{start_date:yesterday,end_date:end});assert.equal(result.events.find(e=>e.key===key).user_label,'stool');assert.equal(result.events.find(e=>e.key===key).classification.source,'manual');
