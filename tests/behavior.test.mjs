@@ -37,3 +37,14 @@ test('device positives and manual labels remain separate, missing days never zer
  const r=row(40);r.urine_detected=true;const a=analyzeBehavior([r,row(90,'b','stool'),row(25,null)],[{id:'a',name:'A'},{id:'b',name:'B'}],'2026-10-09','2026-10-11');
  assert.equal(a.cats[0].split.device_urine,1);assert.equal(a.cats[1].split.manual_stool,1);assert.equal(a.cats[0].daily[0].visits,null);assert.equal(a.unknown_cat_events,1);assert.equal(a.cats[0].hours[12],1);
 });
+
+test('tied observed peaks include all maxima for each cat in the Shanghai window',()=>{
+ const event=(pet,iso)=>({...row(30,pet),timestamp:Date.parse(iso),day:'2026-10-10'});
+ const samples=[event('a','2026-10-09T16:10Z'),event('a','2026-10-10T15:59Z'),
+  event('a','2026-10-10T16:00Z'),event(null,'2026-10-09T16:12Z'),
+  event('b','2026-10-10T00:00Z'),event('b','2026-10-10T00:05Z')];
+ const {cats,unknown_cat_events}=analyzeBehavior(samples,[{id:'a'},{id:'b'},{id:'empty'}],'2026-10-10','2026-10-11');
+ assert.deepEqual(cats.map(c=>[c.peak_hours,c.peak_hour_observed_count,c.peak_hour]),[
+  [[0,23],1,0],[[8],2,8],[[],null,null]]);
+ assert.equal(unknown_cat_events,1);
+});
