@@ -126,3 +126,4 @@ node scripts/check-public-source.mjs
 MIT，见 [LICENSE](LICENSE)。协议实现参考 [py-petkit-api](https://github.com/Jezza34000/py-petkit-api) 与 [mcp-server-petkit](https://github.com/dirkjanfaber/mcp-server-petkit)。上游许可与署名完整保留在 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。PETKIT 名称属于其权利人，本项目不代表官方。
 
 **查看每只猫的活跃时段**：在行为卡片展开“并列 N 个时段”，可查看按上海时间统计、记录条数同为最高的所有小时。每小时的条数是所选日期内已归属该猫的观察记录，不表示偏好，也不能据此排除漏报。未识别猫咪不参与排名。MCP 的 `get_behavior_analysis` 返回 `cats[].peak_hours`（0–23，升序）和 `peak_hour_observed_count`（每个并列小时的条数）；无记录时分别为 `[]` 和 `null`。旧字段 `peak_hour` 仍取并列中的最早小时。
+[按日同步覆盖摘要](docs/COVERAGE.md)：查询结果列出未读取和部分读取的日期，避免把缺失记录当作零次。
