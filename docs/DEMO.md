@@ -20,6 +20,7 @@ Deploy `dist/demo/` to any static host. The build uses relative asset paths and 
 - 7 / 14 / 30 day views and cat filtering for the summary and records.
 - Both-cat comparison charts using the production `web/behavior-panel.tsx` component.
 - Manual classification changes recalculate statistics and inference through the production `lib/behavior.mjs` implementation.
+- Export the displayed (up to 20) records as CSV, clearly marked as synthetic data.
 - Reset restores the fixtures. Refresh also discards edits; nothing is persisted or transmitted.
 
 The demo does not simulate a successful PETKIT connection or synchronization. Production history and credentials are never loaded. Device labels in the fixtures are explicitly described as simulated. The README banner is an illustration, not a screenshot.
