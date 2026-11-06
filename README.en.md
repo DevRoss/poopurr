@@ -47,3 +47,5 @@ Download the current event table as CSV, preserving classification provenance an
 `npm run check` runs type checks, synthetic tests (including workerd/D1), and the frontend build. `npx wrangler deploy --dry-run` checks the Worker bundle. See [CONTRIBUTING](CONTRIBUTING.md), [SECURITY](SECURITY.md), [architecture](docs/ARCHITECTURE.md), [inference limits](docs/CLASSIFICATION.md) and [maintenance](docs/MAINTENANCE.md).
 
 MIT. Upstream attribution: [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.txt).
+
+[Daily fetch coverage](docs/COVERAGE.md): query responses identify missing or partial fetch evidence without treating missing records as zero visits.
